@@ -1,0 +1,7 @@
+name = "south-region-dashboard"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "DATA"
+id = "b516cb658c0f4566a7819b24a66d821d"
