@@ -368,76 +368,7 @@ function autoResetIfNewDay() {
 }
 autoResetIfNewDay();
 
-// === Shared backend storage (Cloudflare KV via /api/data) ===
-const API = '/api/data';
-let saveTimer = null;
-let lastSync = 0;
-
-async function loadFromServer() {
-  try {
-    const r = await fetch(API + '?t=' + Date.now());
-    if (!r.ok) throw new Error(r.status);
-    const txt = await r.text();
-    if (!txt || txt === '{}') return false;
-    const p = JSON.parse(txt);
-    if (p.staff) S.staff = p.staff;
-    if (p.date) S.date = p.date;
-    lastSync = Date.now();
-    return true;
-  } catch (e) {
-    console.warn('Load failed, using local fallback', e);
-    try{const v=localStorage.getItem(SK);if(v){const p=JSON.parse(v);if(p.staff)S.staff=p.staff;if(p.date)S.date=p.date;}}catch(e){}
-    return false;
-  }
-}
-
-async function saveToServer() {
-  const el = document.getElementById('saveStatus');
-  if (el) el.textContent = 'Saving...';
-  const payload = JSON.stringify({ staff: S.staff, date: S.date });
-  try {
-    localStorage.setItem(SK, payload);
-    const headers = { 'Content-Type': 'application/json' };
-    const pw = sessionStorage.getItem('dashpw');
-    if (pw) headers['x-dashboard-password'] = pw;
-    const r = await fetch(API, { method: 'POST', headers, body: payload });
-    if (!r.ok) {
-      if (r.status === 401) {
-        if (el) el.textContent = '🔒 Auth required';
-        promptPassword();
-        return;
-      }
-      throw new Error(r.status);
-    }
-    lastSync = Date.now();
-    if (el) el.textContent = '✓ Synced';
-  } catch (e) {
-    if (el) el.textContent = '⚠ Offline';
-    console.warn('Save failed', e);
-  }
-}
-
-function save() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveToServer, 600);
-}
-
-function promptPassword() {
-  const pw = prompt('Edit password required:');
-  if (pw) {
-    sessionStorage.setItem('dashpw', pw);
-    saveToServer();
-  }
-}
-
-async function pollUpdates() {
-  if (Date.now() - lastSync < 3000) return;
-  const before = JSON.stringify({ staff: S.staff, date: S.date });
-  await loadFromServer();
-  if (autoResetIfNewDay()) save();
-  const after = JSON.stringify({ staff: S.staff, date: S.date });
-  if (before !== after) render();
-}
+function save(){try{localStorage.setItem(SK,JSON.stringify({staff:S.staff,date:S.date}));const e=document.getElementById('saveStatus');e.textContent='Saving...';setTimeout(()=>e.textContent='Auto-saved',500);}catch(e){}}
 function uf(id,f,v){const s=S.staff.find(x=>x.id===id);if(!s)return;s[f]=v;save();render();}
 function addRow(){const id=Math.max(0,...S.staff.map(s=>s.id))+1;S.staff.push({id,name:"",location:"",dfsr:20,supernetLead:0,supernetTarget:0,supernetAchieved:0,postpaidTarget:0,postpaidAchieved:0,remarks:"",onLeave:false});save();render();}
 function removeRow(id){S.staff=S.staff.filter(s=>s.id!==id);save();render();}
@@ -659,15 +590,7 @@ function mi(label,id,field,value,color){
 }
 
 document.getElementById('dateInput').addEventListener('change',ev=>{S.date=ev.target.value;save();render();});
-
 render();
-(async () => {
-  await loadFromServer();
-  // After loading server data, check if it's a new day and reset achievements
-  if (autoResetIfNewDay()) saveToServer();
-  render();
-  setInterval(pollUpdates, 8000);
-})();
 </script>
 </body>
 </html>

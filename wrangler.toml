@@ -1,0 +1,18 @@
+name = "omsdashboard"
+main = "src/worker.js"
+compatibility_date = "2025-01-01"
+
+# Static assets — Worker serves files from /public for any non-API route
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# KV namespace — shared storage for dashboard and event-plans data
+[[kv_namespaces]]
+binding = "DATA"
+id = "b516cb658c0f4566a7819b24a66d821d"
+
+# To enable password-protected editing, uncomment the next two lines:
+# [vars]
+# PASSWORD = "your-password-here"
