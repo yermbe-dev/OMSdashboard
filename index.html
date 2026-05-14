@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>South Region — Daily Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rubik:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          red: '#ED1C24',
+          redDark: '#B8141B',
+          redSoft: '#FEE5E6',
+          black: '#000000',
+          ink: '#0F0F12',
+          slate: '#3A3A42',
+          mute: '#6B6B75',
+          line: '#E5E5EA',
+          bg: '#F7F7F9',
+          white: '#FFFFFF',
+        }
+      },
+      fontFamily: {
+        display: ['Outfit', 'system-ui', 'sans-serif'],
+        body: ['"Noto Sans"', 'system-ui', 'sans-serif'],
+        num: ['Rubik', 'system-ui', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+  body, * { font-family: 'Noto Sans', system-ui, sans-serif; }
+  .display { font-family: 'Outfit', system-ui, sans-serif; letter-spacing: -0.02em; }
+  .num { font-family: 'Rubik', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+  @media print { .no-print { display: none !important; } body { background: white !important; } }
+
+  /* Brand subtle pattern */
+  .brand-pattern {
+    background-image:
+      radial-gradient(circle at 15% 25%, rgba(255,255,255,0.08) 0%, transparent 45%),
+      radial-gradient(circle at 85% 75%, rgba(255,255,255,0.05) 0%, transparent 40%);
+  }
+
+  /* Ring */
+  .ring-anim { transition: stroke-dasharray 0.7s cubic-bezier(0.4,0,0.2,1); }
+
+  /* Card */
+  .s-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .s-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(237,28,36,0.08), 0 2px 8px rgba(0,0,0,0.04); }
+
+  /* Brand red focus ring */
+  /* Sidebar */
+  .nav-item { transition: all 0.15s ease; }
+  .nav-item:hover { background: #FEE5E6; }
+  .nav-item.active { background: #FEE5E6; color: #ED1C24; }
+  .nav-item.active svg { color: #ED1C24; }
+
+  /* Hide views */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Mobile sidebar */
+  @media (max-width: 767px) {
+    #sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+    #sidebar.open { transform: translateX(0); }
+    #sidebarBackdrop.open { opacity: 1; pointer-events: auto; }
+  }
+</style>
+</head>
+<body class="bg-brand-bg min-h-screen">
+
+<!-- Portal layout: sidebar + main -->
+<div class="flex min-h-screen">
+
+  <!-- Mobile sidebar backdrop -->
+  <div id="sidebarBackdrop" class="fixed inset-0 bg-black/40 z-30 md:hidden opacity-0 pointer-events-none transition-opacity" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed md:sticky top-0 left-0 z-40 w-64 h-screen bg-brand-white border-r border-brand-line flex flex-col flex-shrink-0">
+    <!-- Logo -->
+    <div class="px-5 py-5 border-b border-brand-line/60">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 bg-brand-red rounded-xl flex items-center justify-center shadow-sm" style="box-shadow:0 4px 12px rgba(237,28,36,0.25);">
+          <div class="w-4 h-4 rounded-full bg-white"></div>
+        </div>
+        <div>
+          <div class="display font-extrabold text-brand-ink text-base leading-none">ooredoo<span class="text-brand-red">.</span></div>
+          <div class="display text-[9px] uppercase tracking-[0.2em] text-brand-mute font-bold mt-1">South Region</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav items -->
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <button onclick="setView('home')" data-nav="home" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><path d="M3 12L12 3l9 9M5 10v10h4v-6h6v6h4V10"/></svg>
+        Home
+      </button>
+      <button onclick="setView('dashboard')" data-nav="dashboard" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button onclick="setView('staff')" data-nav="staff" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M15 19c0-2 2-4 4-4s2.5 1 2.5 4"/></svg>
+        Staff
+      </button>
+      <button onclick="setView('events')" data-nav="events" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1" fill="currentColor"/><circle cx="12" cy="15" r="1" fill="currentColor"/><circle cx="16" cy="15" r="1" fill="currentColor"/></svg>
+        Event Plans
+      </button>
+      <button onclick="setView('sso')" data-nav="sso" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        SSO Tracker
+      </button>
+      <button onclick="setView('reports')" data-nav="reports" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        Reports
+      </button>
+      <button onclick="setView('settings')" data-nav="settings" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-brand-slate text-left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="text-brand-mute"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        Settings
+      </button>
+    </nav>
+
+    <!-- Footer note -->
+    <div class="px-5 py-3 border-t border-brand-line/60 text-[10px] text-brand-mute font-semibold">
+      <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Live · <span id="liveMonth"></span></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Mobile top bar -->
+    <div class="md:hidden sticky top-0 z-20 bg-brand-white border-b border-brand-line px-4 py-3 flex items-center gap-3">
+      <button onclick="openSidebar()" class="text-brand-ink">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-brand-red rounded-lg flex items-center justify-center">
+          <div class="w-3 h-3 rounded-full bg-white"></div>
+        </div>
+        <div class="display font-extrabold text-brand-ink text-sm">ooredoo<span class="text-brand-red">.</span></div>
+      </div>
+      <div class="flex-1"></div>
+      <span class="flex items-center gap-1 text-[10px] text-brand-mute font-semibold">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        Live
+      </span>
+    </div>
+
+    <!-- =================== HOME VIEW =================== -->
+    <div id="view-home" class="view active p-4 md:p-8 max-w-6xl mx-auto">
+      <h1 class="display text-2xl md:text-3xl font-extrabold text-brand-ink mb-2">Home</h1>
+      <p class="text-brand-mute text-sm mb-6">Welcome. Use the sidebar to navigate.</p>
+      <div class="bg-brand-white rounded-2xl border border-brand-line p-10 text-center">
+        <div class="text-5xl mb-3">🏠</div>
+        <div class="display font-extrabold text-brand-ink">Nothing here yet</div>
+        <p class="text-brand-mute text-sm mt-1">Open the Dashboard from the sidebar to see daily numbers.</p>
+      </div>
+    </div>
+
+    <!-- =================== DASHBOARD VIEW =================== -->
+    <div id="view-dashboard" class="view p-3 md:p-8">
+    <div class="max-w-6xl mx-auto">
+
+  <!-- Control bar -->
+  <div id="controlBar" class="no-print mb-3 flex flex-wrap items-center gap-2 bg-brand-white rounded-2xl p-3 shadow-sm border border-brand-line">
+    <input type="date" id="dateInput" class="px-3 py-2 border border-brand-line rounded-xl text-sm font-semibold bg-brand-bg text-brand-ink num">
+    <button onclick="addRow()" class="px-3 py-2 bg-brand-ink text-white rounded-xl text-sm font-bold hover:bg-brand-slate transition">+ Add Staff</button>
+    <button onclick="resetDay()" class="px-3 py-2 bg-brand-white border border-brand-line text-brand-slate rounded-xl text-sm font-semibold hover:bg-brand-bg transition">↻ Reset</button>
+    <div class="flex-1"></div>
+    <span id="saveStatus" class="text-[11px] text-brand-mute font-medium">Auto-saved</span>
+    <button onclick="toggleMode()" class="px-4 py-2 bg-brand-red text-white rounded-xl text-sm font-bold hover:bg-brand-redDark transition shadow-sm" style="box-shadow:0 4px 14px rgba(237,28,36,0.25);">📷 Screenshot</button>
+  </div>
+
+  <!-- Main dashboard -->
+  <div class="bg-brand-white rounded-3xl shadow-xl overflow-hidden flex flex-col border border-brand-line">
+
+    <!-- HEADER -->
+    <div class="relative px-5 md:px-8 py-6 md:py-8 text-white overflow-hidden brand-pattern order-1" style="background: linear-gradient(135deg, #ED1C24 0%, #C41119 55%, #8B0E14 100%);">
+      <!-- Decorative circles -->
+      <div class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/5"></div>
+      <div class="absolute -right-8 top-12 w-24 h-24 rounded-full bg-white/5"></div>
+      <div class="absolute -left-12 -bottom-12 w-36 h-36 rounded-full bg-black/10"></div>
+
+      <div class="relative flex flex-wrap items-center justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="flex items-center gap-0.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-white/60"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+            </div>
+            <span class="text-[10px] md:text-[11px] uppercase tracking-[0.3em] font-bold text-white/85 display">South Region</span>
+          </div>
+          <h1 class="display text-2xl md:text-4xl font-extrabold leading-none tracking-tight">Daily Summary</h1>
+          <div class="text-white/75 text-xs md:text-sm mt-2 font-semibold" id="dateDisplay"></div>
+        </div>
+        <div class="text-right bg-white/10 px-3 md:px-4 py-2 md:py-2.5 rounded-2xl backdrop-blur-sm border border-white/10">
+          <div class="text-[9px] uppercase tracking-[0.2em] text-white/60 font-bold display">As of</div>
+          <div class="text-base md:text-xl font-extrabold num" id="timeDisplay"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div id="kpiStrip" class="grid grid-cols-3 gap-px bg-brand-line order-2"></div>
+
+    <!-- Data entry / table -->
+    <div id="tableSection" class="order-3">
+      <div id="dataEntryHeading" class="px-5 md:px-8 py-3 bg-brand-ink text-white hidden">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
+          <span class="text-[10px] uppercase tracking-[0.25em] font-bold display">Data Entry</span>
+          <div class="flex-1 h-px bg-white/15"></div>
+          <span class="text-[10px] text-white/50 font-medium">Tap to update</span>
+        </div>
+      </div>
+      <div id="mobileEditCards" class="md:hidden hidden px-3 py-3 bg-brand-bg space-y-2"></div>
+      <div id="mobileEditTotals" class="md:hidden hidden bg-brand-ink text-white px-4 py-3"></div>
+      <div id="mobileViewSummary" class="md:hidden hidden"></div>
+      <div id="desktopTable" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-brand-ink text-white">
+              <th class="px-4 py-3 text-left font-bold text-[10px] uppercase tracking-[0.15em] display">Staff</th>
+              <th class="px-3 py-3 text-left font-bold text-[10px] uppercase tracking-[0.15em] display">Location</th>
+              <th class="px-3 py-3 text-center font-bold text-[10px] uppercase tracking-[0.15em] display">DFSR</th>
+              <th class="px-3 py-3 text-center font-bold text-[10px] uppercase tracking-[0.15em] display">SN Lead</th>
+              <th class="px-3 py-3 text-center font-bold text-[10px] uppercase tracking-[0.15em] display" colspan="2" style="background:rgba(237,28,36,0.3)">SuperNet</th>
+              <th class="px-3 py-3 text-center font-bold text-[10px] uppercase tracking-[0.15em] display" colspan="2" style="background:rgba(16,185,129,0.18)">Postpaid</th>
+              <th class="px-3 py-3 text-left font-bold text-[10px] uppercase tracking-[0.15em] display">Remarks</th>
+              <th class="w-20 edit-only"></th>
+            </tr>
+            <tr class="bg-brand-slate text-white/55 text-[9px] uppercase tracking-[0.15em]">
+              <th colspan="4"></th>
+              <th class="px-2 py-1 text-center font-semibold">Tgt</th>
+              <th class="px-2 py-1 text-center font-semibold">Ach</th>
+              <th class="px-2 py-1 text-center font-semibold">Tgt</th>
+              <th class="px-2 py-1 text-center font-semibold">Ach</th>
+              <th></th><th class="edit-only"></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot id="tableFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Staff performance cards -->
+    <div class="px-4 md:px-8 py-5 md:py-7 bg-brand-bg/60 border-t border-brand-line order-4">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="flex items-center gap-1">
+          <span class="w-1 h-4 bg-brand-red rounded-full"></span>
+          <span class="w-1 h-4 bg-brand-red/40 rounded-full"></span>
+        </div>
+        <h2 class="display text-xs md:text-sm uppercase tracking-[0.2em] font-extrabold text-brand-ink">Staff Performance</h2>
+        <div class="flex-1 h-px bg-brand-line"></div>
+        <span class="text-[10px] text-brand-mute font-bold uppercase tracking-[0.15em] display">Today</span>
+      </div>
+      <div id="staffCards"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-5 md:px-8 py-3 bg-brand-white border-t border-brand-line flex flex-wrap justify-between items-center gap-2 text-[10px] text-brand-mute font-semibold order-5">
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
+        <span class="display tracking-wider uppercase">Ooredoo Maldives · Distribution · South Region</span>
+      </div>
+      <span id="genDate" class="num"></span>
+    </div>
+  </div>
+    </div>
+    </div><!-- /#view-dashboard -->
+
+    <!-- =================== STAFF VIEW (placeholder) =================== -->
+    <div id="view-staff" class="view p-4 md:p-8 max-w-6xl mx-auto">
+      <h1 class="display text-2xl md:text-3xl font-extrabold text-brand-ink mb-2">Staff</h1>
+      <p class="text-brand-mute text-sm mb-6">Manage staff roster, locations, leave status, and targets here.</p>
+      <div class="bg-brand-white rounded-2xl border border-brand-line p-10 text-center">
+        <div class="text-5xl mb-3">👥</div>
+        <div class="display font-extrabold text-brand-ink">Coming soon</div>
+        <p class="text-brand-mute text-sm mt-1">For now, staff are managed inside the Dashboard view.</p>
+      </div>
+    </div>
+
+    <!-- =================== EVENT PLANS VIEW =================== -->
+    <div id="view-events" class="view">
+      <iframe src="event-plans.html" id="eventsFrame" style="border:none; width:100%; height:calc(100vh - 4rem); display:block; background:#FAFAFA;"></iframe>
+    </div>
+
+    <!-- =================== SSO TRACKER VIEW =================== -->
+    <div id="view-sso" class="view">
+      <iframe src="sso-tracker.html" id="ssoFrame" style="border:none; width:100%; height:calc(100vh - 4rem); display:block; background:#f8f9fa;"></iframe>
+    </div>
+
+    <!-- =================== REPORTS VIEW (placeholder) =================== -->
+    <div id="view-reports" class="view p-4 md:p-8 max-w-6xl mx-auto">
+      <h1 class="display text-2xl md:text-3xl font-extrabold text-brand-ink mb-2">Reports</h1>
+      <p class="text-brand-mute text-sm mb-6">Monthly summaries, exports, and historical trends.</p>
+      <div class="bg-brand-white rounded-2xl border border-brand-line p-10 text-center">
+        <div class="text-5xl mb-3">📊</div>
+        <div class="display font-extrabold text-brand-ink">Coming soon</div>
+        <p class="text-brand-mute text-sm mt-1">Tell Claude what reports you want and we'll add them.</p>
+      </div>
+    </div>
+
+    <!-- =================== SETTINGS VIEW (placeholder) =================== -->
+    <div id="view-settings" class="view p-4 md:p-8 max-w-6xl mx-auto">
+      <h1 class="display text-2xl md:text-3xl font-extrabold text-brand-ink mb-2">Settings</h1>
+      <p class="text-brand-mute text-sm mb-6">Preferences, defaults, and sync controls.</p>
+      <div class="bg-brand-white rounded-2xl border border-brand-line p-10 text-center">
+        <div class="text-5xl mb-3">⚙️</div>
+        <div class="display font-extrabold text-brand-ink">Coming soon</div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /portal layout -->
+
+<script>
+// ============ PORTAL NAV ============
+function setView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name)?.classList.add('active');
+  document.querySelectorAll('[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === name);
+  });
+  closeSidebar();
+  window.scrollTo(0, 0);
+  if (name === 'home') renderHome();
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarBackdrop').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+}
+
+// ============ DASHBOARD DATA ============
+const SK = 'ooredoo_daily_v3';
+const DS = [
+  {id:1,name:"Afee",location:"Addu",dfsr:20,supernetLead:2,supernetTarget:2,supernetAchieved:1,postpaidTarget:0,postpaidAchieved:0,remarks:"",onLeave:false},
+  {id:2,name:"Nazfa",location:"FVM",dfsr:20,supernetLead:1,supernetTarget:2,supernetAchieved:0,postpaidTarget:0,postpaidAchieved:0,remarks:"",onLeave:false},
+  {id:3,name:"Iyala",location:"Addu",dfsr:0,supernetLead:0,supernetTarget:1,supernetAchieved:0,postpaidTarget:2,postpaidAchieved:0,remarks:"",onLeave:false},
+];
+let S={staff:[...DS],date:new Date().toISOString().split('T')[0],mode:'edit'};
+try{const v=localStorage.getItem(SK);if(v){const p=JSON.parse(v);if(p.staff)S.staff=p.staff;if(p.date)S.date=p.date;}}catch(e){}
+
+// Auto-reset achievements when a new day starts (keeps targets, names, locations, leave)
+function autoResetIfNewDay() {
+  const today = new Date().toISOString().split('T')[0];
+  if (S.date !== today) {
+    S.date = today;
+    S.staff.forEach(s => {
+      s.dfsr = 0;
+      s.supernetLead = 0;
+      s.supernetAchieved = 0;
+      s.postpaidAchieved = 0;
+      s.remarks = '';
+    });
+    return true;
+  }
+  return false;
+}
+autoResetIfNewDay();
+
+function save(){try{localStorage.setItem(SK,JSON.stringify({staff:S.staff,date:S.date}));const e=document.getElementById('saveStatus');e.textContent='Saving...';setTimeout(()=>e.textContent='Auto-saved',500);}catch(e){}}
+function uf(id,f,v){const s=S.staff.find(x=>x.id===id);if(!s)return;s[f]=v;save();render();}
+function addRow(){const id=Math.max(0,...S.staff.map(s=>s.id))+1;S.staff.push({id,name:"",location:"",dfsr:20,supernetLead:0,supernetTarget:0,supernetAchieved:0,postpaidTarget:0,postpaidAchieved:0,remarks:"",onLeave:false});save();render();}
+function removeRow(id){S.staff=S.staff.filter(s=>s.id!==id);save();render();}
+function resetDay(){if(!confirm('Reset DFSR, SN Lead, Achieved figures and remarks?'))return;S.date=new Date().toISOString().split('T')[0];S.staff.forEach(s=>{s.dfsr=0;s.supernetLead=0;s.supernetAchieved=0;s.postpaidAchieved=0;s.remarks='';});save();render();}
+
+function toggleMode(){
+  S.mode=S.mode==='edit'?'view':'edit';
+  const bar=document.getElementById('controlBar');
+  if(S.mode==='view'){
+    bar.classList.add('hidden');
+    if(!document.getElementById('backBar')){
+      const b=document.createElement('div');b.id='backBar';
+      b.className='no-print fixed bottom-5 right-5 z-50';
+      b.innerHTML='<button onclick="toggleMode()" class="px-5 py-3 bg-brand-ink text-white rounded-2xl text-sm font-bold hover:bg-brand-slate transition flex items-center gap-2" style="box-shadow:0 8px 24px rgba(0,0,0,0.2);"><span>←</span> Back to Edit</button>';
+      document.body.appendChild(b);
+    }else document.getElementById('backBar').classList.remove('hidden');
+  }else{bar.classList.remove('hidden');const bb=document.getElementById('backBar');if(bb)bb.classList.add('hidden');}
+  render();
+}
+
+function e(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function render(){
+  const A=S.staff.filter(s=>!s.onLeave),isE=S.mode==='edit',rows=isE?S.staff:A;
+  const t=A.reduce((a,s)=>({d:a.d+ +(s.dfsr||0),l:a.l+ +(s.supernetLead||0),st:a.st+ +(s.supernetTarget||0),sa:a.sa+ +(s.supernetAchieved||0),pt:a.pt+ +(s.postpaidTarget||0),pa:a.pa+ +(s.postpaidAchieved||0)}),{d:0,l:0,st:0,sa:0,pt:0,pa:0});
+  const snP=t.st?Math.round(t.sa/t.st*100):0;
+  const ppP=t.pt?Math.round(t.pa/t.pt*100):0;
+  const hasPP=t.pt>0||t.pa>0;
+
+  const dd=new Date(S.date);
+  document.getElementById('dateDisplay').textContent=dd.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('timeDisplay').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('genDate').textContent='Generated '+new Date().toLocaleDateString('en-GB');
+  document.getElementById('dateInput').value=S.date;
+
+  document.getElementById('kpiStrip').innerHTML=`
+    ${kpi('Active Staff',A.length)}
+    ${kpi('DFSR Total',t.d)}
+    ${kpi('SuperNet',t.sa+'/'+t.st,snP,true,'r')}
+    ${hasPP?kpi('Postpaid',t.pa+'/'+t.pt,ppP,true,'g'):''}`;
+  document.getElementById('kpiStrip').className=`grid ${hasPP?'grid-cols-2 md:grid-cols-4':'grid-cols-3'} gap-px bg-brand-line order-2`;
+
+  document.getElementById('tableBody').innerHTML=rows.map((s,i)=>row(s,i,isE)).join('');
+  document.getElementById('tableFoot').innerHTML=`<tr class="bg-brand-bg font-extrabold text-brand-ink border-t-2 border-brand-line">
+    <td class="px-4 py-3 uppercase text-[10px] tracking-[0.2em] display" colspan="2">Total</td>
+    <td class="px-3 py-3 text-center num">${t.d}</td><td class="px-3 py-3 text-center num">${t.l}</td>
+    <td class="px-3 py-3 text-center num" style="color:#ED1C24">${t.st}</td><td class="px-3 py-3 text-center num" style="color:#ED1C24">${t.sa}</td>
+    <td class="px-3 py-3 text-center num text-emerald-700">${t.pt}</td><td class="px-3 py-3 text-center num text-emerald-700">${t.pa}</td>
+    <td></td>${isE?'<td></td>':''}</tr>`;
+
+  // Staff cards by location
+  const bL={};A.forEach(s=>{const l=s.location||'Unassigned';if(!bL[l])bL[l]=[];bL[l].push(s);});
+  const locs=Object.keys(bL).sort();
+  document.getElementById('staffCards').innerHTML=locs.length===0?'<div class="text-center text-brand-mute text-sm py-8">No active staff</div>':locs.map(l=>`
+    <div class="mb-5 last:mb-0">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-1.5 px-3 py-1 bg-brand-white border border-brand-line rounded-full shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
+          <span class="display text-[10px] font-extrabold uppercase tracking-[0.15em] text-brand-ink">${e(l)}</span>
+          <span class="num text-[10px] font-bold text-brand-mute bg-brand-bg px-1.5 py-0.5 rounded-full">${bL[l].length}</span>
+        </div><div class="flex-1 h-px bg-brand-line"></div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">${bL[l].map(card).join('')}</div>
+    </div>`).join('');
+
+  // Mobile edit cards
+  document.getElementById('mobileEditCards').innerHTML=S.staff.map(mc).join('');
+  document.getElementById('mobileEditTotals').innerHTML=`<div class="flex items-center justify-between gap-2 text-center">
+    <div class="flex-1"><div class="text-[8px] uppercase tracking-[0.15em] text-white/40 font-bold display">DFSR</div><div class="text-sm font-extrabold num">${t.d}</div></div>
+    <div class="flex-1 border-l border-white/10"><div class="text-[8px] uppercase tracking-[0.15em] text-white/40 font-bold display">Lead</div><div class="text-sm font-extrabold num">${t.l}</div></div>
+    <div class="flex-1 border-l border-white/10"><div class="text-[8px] uppercase tracking-[0.15em] font-bold display" style="color:#FF6B6F">SN</div><div class="text-sm font-extrabold num" style="color:#FF6B6F">${t.sa}<span class="text-white/30 text-xs">/${t.st}</span></div></div>
+    <div class="flex-1 border-l border-white/10"><div class="text-[8px] uppercase tracking-[0.15em] text-emerald-300 font-bold display">PP</div><div class="text-sm font-extrabold num text-emerald-300">${t.pa}<span class="text-white/30 text-xs">/${t.pt}</span></div></div>
+  </div>`;
+
+  // Mobile view summary
+  const mr=A.map((s,i)=>{
+    const has= +(s.postpaidTarget||0)>0|| +(s.postpaidAchieved||0)>0;
+    return `<tr class="${i%2===0?'bg-brand-white':'bg-brand-bg'}">
+    <td class="px-2 py-2 font-extrabold text-brand-ink text-xs display">${e(s.name)}</td>
+    <td class="px-1 py-2 text-brand-mute text-[10px] uppercase font-bold display">${e(s.location)}</td>
+    <td class="px-2 py-2 text-center num text-brand-slate font-semibold">${s.dfsr}</td>
+    <td class="px-2 py-2 text-center num text-brand-slate font-semibold">${s.supernetLead}</td>
+    <td class="px-2 py-2 text-center num font-bold" style="color:#ED1C24">${s.supernetAchieved}<span class="text-brand-mute font-normal">/${s.supernetTarget}</span></td>
+    <td class="px-2 py-2 text-center num font-bold text-emerald-700">${has?s.postpaidAchieved+'<span class="text-brand-mute font-normal">/'+s.postpaidTarget+'</span>':'<span class="text-brand-mute/50">—</span>'}</td>
+  </tr>`;}).join('');
+  document.getElementById('mobileViewSummary').innerHTML=`<table class="w-full text-xs"><thead><tr class="bg-brand-ink text-white">
+    <th class="px-2 py-2 text-left text-[9px] uppercase tracking-[0.15em] font-bold display">Staff</th>
+    <th class="px-1 py-2 text-left text-[9px] uppercase tracking-[0.15em] font-bold display">Loc</th>
+    <th class="px-2 py-2 text-center text-[9px] uppercase tracking-[0.15em] font-bold display">DFSR</th>
+    <th class="px-2 py-2 text-center text-[9px] uppercase tracking-[0.15em] font-bold display">Lead</th>
+    <th class="px-2 py-2 text-center text-[9px] uppercase tracking-[0.15em] font-bold display" style="background:rgba(237,28,36,0.35)">SN</th>
+    <th class="px-2 py-2 text-center text-[9px] uppercase tracking-[0.15em] font-bold display" style="background:rgba(16,185,129,0.2)">PP</th>
+  </tr></thead><tbody>${mr}</tbody>
+  <tfoot><tr class="bg-brand-bg font-extrabold text-brand-ink border-t-2 border-brand-line">
+    <td class="px-2 py-2 uppercase text-[9px] tracking-[0.2em] display" colspan="2">Total</td>
+    <td class="px-2 py-2 text-center num">${t.d}</td>
+    <td class="px-2 py-2 text-center num">${t.l}</td>
+    <td class="px-2 py-2 text-center num" style="color:#ED1C24">${t.sa}<span class="text-brand-mute font-normal">/${t.st}</span></td>
+    <td class="px-2 py-2 text-center num text-emerald-700">${t.pa}<span class="text-brand-mute font-normal">/${t.pt}</span></td>
+  </tr></tfoot></table>`;
+
+  document.querySelectorAll('.edit-only').forEach(el=>el.style.display=isE?'':'none');
+  const dt=document.getElementById('desktopTable'),mec=document.getElementById('mobileEditCards'),met=document.getElementById('mobileEditTotals'),mvs=document.getElementById('mobileViewSummary');
+  if(isE){dt.classList.add('hidden','md:block');mec.classList.remove('hidden');met.classList.remove('hidden');mvs.classList.add('hidden');}
+  else{dt.classList.remove('hidden');dt.classList.add('hidden','md:block');mec.classList.add('hidden');met.classList.add('hidden');mvs.classList.remove('hidden');}
+  const ts=document.getElementById('tableSection'),dh=document.getElementById('dataEntryHeading');
+  if(isE){ts.classList.remove('order-3');ts.classList.add('order-6');dh.classList.remove('hidden');}
+  else{ts.classList.add('order-3');ts.classList.remove('order-6');dh.classList.add('hidden');}
+}
+
+function renderHome() {
+  // Home is empty; just update the live month indicator in sidebar
+  const d = new Date(S.date);
+  const lm = document.getElementById('liveMonth');
+  if (lm) lm.textContent = d.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+}
+
+function kpi(label,value,pct,hasBar,color){
+  const c=color==='g'?'#059669':color==='r'?'#ED1C24':'#0F0F12';
+  return `<div class="bg-brand-white px-4 md:px-5 py-3.5 md:py-4">
+    <div class="display text-[10px] uppercase tracking-[0.2em] text-brand-mute font-bold">${label}</div>
+    <div class="flex items-baseline gap-2 mt-1">
+      <div class="num text-2xl md:text-3xl font-extrabold text-brand-ink leading-none">${value}</div>
+      ${pct!=null?`<div class="num text-xs font-extrabold" style="color:${c}">${pct}%</div>`:''}
+    </div>
+    ${hasBar?`<div class="mt-2 h-1.5 bg-brand-line rounded-full overflow-hidden"><div class="h-full rounded-full transition-all duration-700" style="width:${Math.min(pct,100)}%;background:${c}"></div></div>`:''}
+  </div>`;
+}
+
+function row(s,i,isE){
+  const bg=i%2===0?'bg-brand-white':'bg-brand-bg/50',op=s.onLeave?'opacity-40':'';
+  const n=(f,c)=>{
+    const cl=c==='r'?'border-red-100 bg-red-50/40':c==='g'?'border-emerald-100 bg-emerald-50/40':'border-brand-line bg-brand-white';
+    const tc=c==='r'?'color:#ED1C24':c==='g'?'color:#059669':'color:#0F0F12';
+    return isE?`<td class="px-3 py-2 text-center"><input type="number" value="${s[f]}" onchange="uf(${s.id},'${f}',Number(this.value))" class="num w-14 px-2 py-1 text-center border rounded-lg text-sm font-bold focus:outline-none ${cl}"></td>`
+    :`<td class="px-3 py-2 text-center"><span class="num font-extrabold" style="${tc}">${s[f]}</span></td>`;
+  };
+  const nm=isE?`<input type="text" value="${e(s.name)}" onchange="uf(${s.id},'name',this.value)" class="display w-24 px-2 py-1 border border-brand-line rounded-lg text-sm font-bold">`:`<span class="display font-extrabold text-brand-ink">${e(s.name)}</span>`;
+  const lc=isE?`<input type="text" value="${e(s.location)}" onchange="uf(${s.id},'location',this.value)" class="w-20 px-2 py-1 border border-brand-line rounded-lg text-sm">`:`<span class="text-brand-slate font-semibold">${e(s.location)}</span>`;
+  const rm=isE?`<input type="text" value="${e(s.remarks)}" onchange="uf(${s.id},'remarks',this.value)" placeholder="Note..." class="w-full px-2 py-1 border border-brand-line rounded-lg text-sm bg-amber-50/50">`:`<span class="text-brand-mute text-xs italic">${e(s.remarks)||'—'}</span>`;
+  const bd=s.onLeave?'<span class="display ml-1.5 text-[8px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md">Leave</span>':'';
+  const ac=isE?`<td class="px-2"><div class="flex items-center gap-1">
+    <button onclick="uf(${s.id},'onLeave',${!s.onLeave})" class="display text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-1 rounded-md transition ${s.onLeave?'bg-amber-500 text-white':'bg-brand-bg text-brand-mute hover:bg-brand-line'}">Lv</button>
+    <button onclick="removeRow(${s.id})" class="text-brand-mute/50 hover:text-brand-red transition text-sm px-1">×</button></div></td>`:'';
+  return `<tr class="${bg} ${op}"><td class="px-4 py-2.5">${nm}${bd}</td><td class="px-3 py-2.5">${lc}</td>${n('dfsr')}${n('supernetLead')}${n('supernetTarget','r')}${n('supernetAchieved','r')}${n('postpaidTarget','g')}${n('postpaidAchieved','g')}<td class="px-3 py-2.5">${rm}</td>${ac}</tr>`;
+}
+
+function card(s){
+  const snP=s.supernetTarget?Math.round(s.supernetAchieved/s.supernetTarget*100):0;
+  const ppP=s.postpaidTarget?Math.round(s.postpaidAchieved/s.postpaidTarget*100):0;
+  const hasPP= +(s.postpaidTarget||0)>0|| +(s.postpaidAchieved||0)>0;
+  const tT= +(s.supernetTarget||0)+ +(s.postpaidTarget||0);
+  const tA= +(s.supernetAchieved||0)+ +(s.postpaidAchieved||0);
+  const oP=tT?Math.round(tA/tT*100):0;
+  const rc=oP>=100?'#059669':oP>=50?'#F59E0B':'#ED1C24';
+  const da=(Math.min(oP,100)/100)*175.93;
+  const ini=(s.name||'?').slice(0,2).toUpperCase();
+  return `<div class="s-card bg-brand-white rounded-2xl border border-brand-line shadow-sm overflow-hidden">
+    <div class="px-3 py-2.5 border-b border-brand-bg flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-full text-white flex items-center justify-center font-extrabold text-xs display" style="background:linear-gradient(135deg,#ED1C24,#B8141B)">${e(ini)}</div>
+      <div class="flex-1 min-w-0">
+        <div class="display font-extrabold text-brand-ink text-sm truncate leading-tight">${e(s.name)||'Unnamed'}</div>
+        <div class="text-[10px] text-brand-mute font-semibold mt-0.5">${e(s.location)||'—'} <span class="text-brand-line">·</span> DFSR <span class="num font-bold">${s.dfsr}</span></div>
+      </div>
+    </div>
+    <div class="px-3 py-3 flex items-center gap-3 bg-brand-bg/40">
+      <div class="relative flex-shrink-0" style="width:54px;height:54px;">
+        <svg viewBox="0 0 64 64" style="width:54px;height:54px;transform:rotate(-90deg)">
+          <circle cx="32" cy="32" r="28" stroke="#E5E5EA" stroke-width="5" fill="none"/>
+          <circle cx="32" cy="32" r="28" stroke="${rc}" stroke-width="5" fill="none" stroke-dasharray="${da} 175.93" stroke-linecap="round" class="ring-anim"/>
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center"><span class="num text-xs font-extrabold text-brand-ink">${oP}%</span></div>
+      </div>
+      <div class="flex-1">
+        <div class="display text-[9px] uppercase tracking-[0.2em] text-brand-mute font-bold">Overall</div>
+        <div class="num text-xl font-extrabold text-brand-ink leading-tight">${tA}<span class="text-brand-mute text-xs font-bold"> / ${tT}</span></div>
+        <div class="text-[10px] text-brand-mute font-semibold">Lead: <span class="num font-bold">${s.supernetLead}</span></div>
+      </div>
+    </div>
+    <div class="px-3 py-3 space-y-2.5 border-t border-brand-bg">
+      ${pb('SuperNet',s.supernetAchieved,s.supernetTarget,snP,'#ED1C24')}
+      ${hasPP?pb('Postpaid',s.postpaidAchieved,s.postpaidTarget,ppP,'#059669'):''}
+    </div>
+    ${s.remarks?`<div class="px-3 py-2 bg-amber-50 border-t border-amber-100/60 text-[10px] text-brand-slate italic font-medium">"${e(s.remarks)}"</div>`:''}
+  </div>`;
+}
+
+function pb(label,ach,tgt,pct,color){
+  return `<div><div class="flex justify-between items-baseline mb-1">
+    <span class="display text-[10px] font-extrabold text-brand-slate uppercase tracking-[0.15em]">${label}</span>
+    <span class="num text-[11px]"><span class="font-extrabold" style="color:${color}">${ach}</span><span class="text-brand-mute"> / ${tgt}</span><span class="ml-1.5 font-extrabold" style="color:${color}">${pct}%</span></span>
+  </div><div class="h-1.5 bg-brand-line rounded-full overflow-hidden"><div class="h-full rounded-full transition-all duration-700" style="width:${Math.min(pct,100)}%;background:${color}"></div></div></div>`;
+}
+
+function mc(s){
+  const op=s.onLeave?'opacity-50':'',bd=s.onLeave?'<span class="display text-[7px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-1 py-0.5 rounded">LV</span>':'';
+  return `<div class="bg-brand-white rounded-xl border border-brand-line p-2.5 shadow-sm ${op}">
+    <div class="flex items-center gap-2 mb-2">
+      <input type="text" value="${e(s.name)}" onchange="uf(${s.id},'name',this.value)" placeholder="Name" class="display flex-1 min-w-0 px-2 py-1 border border-brand-line rounded-lg text-sm font-bold">
+      <input type="text" value="${e(s.location)}" onchange="uf(${s.id},'location',this.value)" placeholder="Loc" class="w-14 px-2 py-1 border border-brand-line rounded-lg text-xs text-center">
+      ${bd}
+      <button onclick="uf(${s.id},'onLeave',${!s.onLeave})" class="display text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-1 rounded-md ${s.onLeave?'bg-amber-500 text-white':'bg-brand-bg text-brand-mute'}">Lv</button>
+      <button onclick="removeRow(${s.id})" class="text-brand-mute/50 hover:text-brand-red text-sm px-1">×</button>
+    </div>
+    <div class="grid grid-cols-6 gap-1.5">
+      ${mi('DFSR',s.id,'dfsr',s.dfsr)}${mi('Lead',s.id,'supernetLead',s.supernetLead)}
+      ${mi('SN T',s.id,'supernetTarget',s.supernetTarget,'r')}${mi('SN A',s.id,'supernetAchieved',s.supernetAchieved,'r')}
+      ${mi('PP T',s.id,'postpaidTarget',s.postpaidTarget,'g')}${mi('PP A',s.id,'postpaidAchieved',s.postpaidAchieved,'g')}
+    </div>
+    <input type="text" value="${e(s.remarks)}" onchange="uf(${s.id},'remarks',this.value)" placeholder="Remarks" class="mt-1.5 w-full px-2 py-1 border border-brand-line rounded-lg text-xs bg-amber-50/40">
+  </div>`;
+}
+
+function mi(label,id,field,value,color){
+  const cl=color==='r'?'border-red-100 bg-red-50/40':color==='g'?'border-emerald-100 bg-emerald-50/40':'border-brand-line bg-brand-white';
+  const lc=color==='r'?'color:#ED1C24':color==='g'?'color:#059669':'color:#6B6B75';
+  return `<div><div class="display text-[7px] font-extrabold uppercase tracking-wider text-center" style="${lc}">${label}</div>
+    <input type="number" value="${value}" onchange="uf(${id},'${field}',Number(this.value))" class="num w-full px-1 py-1 text-center border rounded-lg text-sm font-extrabold ${cl}"></div>`;
+}
+
+document.getElementById('dateInput').addEventListener('change',ev=>{S.date=ev.target.value;save();render();});
+render();
+</script>
+</body>
+</html>

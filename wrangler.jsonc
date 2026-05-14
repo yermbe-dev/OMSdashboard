@@ -1,14 +1,16 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "omsdashboard",
-  "compatibility_date": "2026-05-14",
-  "observability": {
-    "enabled": true
-  },
+  "main": "worker.js",
+  "compatibility_date": "2025-01-01",
   "assets": {
-    "directory": "."
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
   },
-  "compatibility_flags": [
-    "nodejs_compat"
+  "kv_namespaces": [
+    {
+      "binding": "DATA",
+      "id": "b516cb658c0f4566a7819b24a66d821d"
+    }
   ]
 }
