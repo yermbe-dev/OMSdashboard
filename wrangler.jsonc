@@ -1,0 +1,16 @@
+{
+  "name": "omsdashboard",
+  "main": "worker.js",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "DATA",
+      "id": "b516cb658c0f4566a7819b24a66d821d"
+    }
+  ]
+}
